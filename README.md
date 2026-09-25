@@ -23,7 +23,7 @@ Meta's Ad Library is the largest public archive of advertising creative in the w
 > points at a quiz funnel instead. They are moving from product-led to
 > problem-led, and the old ad is still running because it still works.
 
-Built by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=readme&utm_campaign=facebook-ad-library-mcp).
+Built by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp&utm_content=readme).
 
 <img src="https://cdn.navid.media/repos/facebook-ad-library-mcp.gif?v=1" alt="Claude Code using the Facebook Ad Library MCP server" width="520">
 
@@ -354,8 +354,8 @@ Navid Moazzez is a leading AI business strategist, and the host of the AI Creato
 
 **Links**
 
-- Personal website: [navid.me](https://navid.me?utm_source=github&utm_medium=readme&utm_campaign=facebook-ad-library-mcp)
-- Navid Media: [navid.media](https://navid.media?utm_source=github&utm_medium=readme&utm_campaign=facebook-ad-library-mcp)
+- Personal website: [navid.me](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp&utm_content=readme)
+- Navid Media: [navid.media](https://navid.media?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp&utm_content=readme)
 - YouTube: [@thenavidm](https://youtube.com/@thenavidm?sub_confirmation=1) and [@thenavidai](https://youtube.com/@thenavidai?sub_confirmation=1)
 - X: [@thenavidm](https://x.com/thenavidm)
 - Instagram: [@thenavidm](https://instagram.com/thenavidm)
@@ -371,4 +371,4 @@ Not affiliated with, endorsed by, or connected to Meta Platforms, Inc.
 
 ---
 
-© 2026 [NM Media](https://navid.media?utm_source=github&utm_medium=readme&utm_campaign=facebook-ad-library-mcp). Made with ❤️ by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=readme&utm_campaign=facebook-ad-library-mcp).
+© 2026 [NM Media](https://navid.media?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp&utm_content=readme). Made with ❤️ by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp&utm_content=readme).
