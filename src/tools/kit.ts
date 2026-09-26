@@ -11,13 +11,19 @@ import { z, type ZodRawShape } from "zod";
 import type { Backend } from "../adlibrary/types.js";
 import type { Config } from "../config.js";
 import { AdLibraryError } from "../errors.js";
-import type { SnapshotStore } from "../store/snapshots.js";
+import { createBackend } from "../backends/index.js";
+import { SnapshotStore } from "../store/snapshots.js";
 
 export type ToolContext = {
   backend: Backend;
   config: Config;
   store: SnapshotStore;
 };
+
+/** The context every tool call gets, built one way for both surfaces. */
+export function makeContext(config: Config): ToolContext {
+  return { backend: createBackend(config), config, store: new SnapshotStore(config.storeDir) };
+}
 
 export type ContentBlock =
   | { type: "text"; text: string }

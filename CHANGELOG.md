@@ -1,12 +1,33 @@
-# Facebook Ad Library MCP changelog
+# Facebook Ad Library MCP Server & CLI changelog
 
 | Component | Version | Last Updated |
 |-----------|---------|--------------|
-| facebook-ad-library-mcp | 0.4.0 | 2026-09-01 |
+| facebook-ad-library-mcp-cli | 0.5.0 | 2026-09-26 |
 
 ---
 
 What changed, newest first, in terms of what it means for someone using it.
+
+## 0.5.0
+
+**A CLI.** `facebook-ad-library-cli` runs every tool as a shell command, from the
+same tool list the MCP server reads, so the two cannot drift. Agents that run
+commands, like Claude Code and Codex, use it without paying for the tool list on
+every turn. `view-ad-creative` prints its text and one line per image, because a
+terminal cannot show pictures. Exit codes follow the house contract: 2 usage,
+3 not found, 4 a rejected key, 5 upstream, 7 out of credits, 10 a backend that
+is not set up.
+
+**Renamed to facebook-ad-library-mcp-cli**, the name every server with a CLI
+carries. The old package is deprecated with a pointer here, and GitHub
+redirects the old repo address.
+
+**A Claude Desktop extension.** `desktop-extension/build.sh` produces a `.mcpb`
+that installs on a double click. It asks which backend to use and for its key.
+Each release carries the file.
+
+**The README lists every environment variable**, and `--help` names the two it
+was missing. A test now fails when either drifts from the code.
 
 ## 0.4.0
 

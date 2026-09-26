@@ -4,7 +4,7 @@
 # setup is visible immediately rather than on the first tool call.
 set -euo pipefail
 
-PACKAGE="@thenavidm/facebook-ad-library-mcp"
+PACKAGE="@thenavidm/facebook-ad-library-mcp-cli"
 
 command -v node >/dev/null 2>&1 || {
   echo "Node 20 or newer is required. Get it from https://nodejs.org" >&2
@@ -28,7 +28,7 @@ cat <<'NEXT'
 
 Add it to Claude Code with:
 
-  claude mcp add facebook-ads -- npx -y @thenavidm/facebook-ad-library-mcp@latest
+  claude mcp add facebook-ads -- npx -y @thenavidm/facebook-ad-library-mcp-cli@latest
 
 For every other client, see the README.
 NEXT

@@ -7,3 +7,5 @@ dist/
 coverage/
 _archive/
 snapshots/
+desktop-extension/build/
+desktop-extension/*.mcpb

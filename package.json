@@ -1,11 +1,12 @@
 {
-  "name": "@thenavidm/facebook-ad-library-mcp",
-  "version": "0.4.0",
-  "description": "Facebook Ad Library MCP server for Claude Code and AI agents. Reads Meta's public ad data directly, so creative, spend ranges and run dates come back as structured records.",
+  "name": "@thenavidm/facebook-ad-library-mcp-cli",
+  "version": "0.5.0",
+  "description": "Facebook Ad Library MCP server and CLI for Claude Code, Codex and AI agents. 9 tools that read every ad running on Facebook, Instagram, Messenger, Threads and Audience Network, for any advertiser in any country, free and with no API key.",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
-    "facebook-ad-library-mcp": "dist/index.js"
+    "facebook-ad-library-mcp": "dist/index.js",
+    "facebook-ad-library-cli": "dist/index.js"
   },
   "engines": {
     "node": ">=20"
@@ -21,7 +22,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.25.2"
   },
   "optionalDependencies": {
     "playwright": "^1.62.1"
@@ -36,10 +38,10 @@
   "homepage": "https://navid.me",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/thenavidm/facebook-ad-library-mcp.git"
+    "url": "git+https://github.com/thenavidm/facebook-ad-library-mcp-cli.git"
   },
   "bugs": {
-    "url": "https://github.com/thenavidm/facebook-ad-library-mcp/issues"
+    "url": "https://github.com/thenavidm/facebook-ad-library-mcp-cli/issues"
   },
   "keywords": [
     "mcp",
@@ -53,7 +55,9 @@
     "claude",
     "claude-code",
     "ai-agents",
-    "llm-tools"
+    "llm-tools",
+    "cli",
+    "command-line-tool"
   ],
   "files": [
     "dist",

@@ -12,3 +12,5 @@ ai-agents
 playwright
 typescript
 llm-tools
+cli
+command-line-tool

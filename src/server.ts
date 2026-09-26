@@ -10,13 +10,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { Backend } from "./adlibrary/types.js";
-import { createBackend } from "./backends/index.js";
 import { loadConfig, type Config } from "./config.js";
-import { SnapshotStore } from "./store/snapshots.js";
 import { ALL_TOOLS } from "./tools/index.js";
-import { register, type ToolContext } from "./tools/kit.js";
+import { makeContext, register } from "./tools/kit.js";
 
-export const VERSION = "0.4.0";
+export const VERSION = "0.5.0";
 
 export const INSTRUCTIONS = `Reads Meta's public Ad Library: every ad running on Facebook, Instagram, Messenger, Threads and Audience Network, for any advertiser, in any country.
 
@@ -45,9 +43,8 @@ export type BuiltServer = {
 };
 
 export function buildServer(config: Config = loadConfig()): BuiltServer {
-  const backend = createBackend(config);
-  const store = new SnapshotStore(config.storeDir);
-  const context: ToolContext = { backend, config, store };
+  const context = makeContext(config);
+  const { backend } = context;
 
   const server = new McpServer(
     { name: "facebook-ad-library", version: VERSION },

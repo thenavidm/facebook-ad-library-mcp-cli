@@ -1,0 +1,85 @@
+{
+  "manifest_version": "0.2",
+  "name": "facebook-ad-library",
+  "display_name": "Facebook Ad Library",
+  "version": "0.5.0",
+  "description": "Facebook Ad Library MCP server and CLI for Claude Code, Codex and AI agents. 9 tools that read every ad running on Facebook, Instagram, Messenger, Threads and Audience Network, for any advertiser in any country, free and with no API key.",
+  "long_description": "Reads Meta's public Ad Library: every ad running on Facebook, Instagram, Messenger, Threads and Audience Network, for any advertiser, in any country.\n\nThe free browser backend needs no key, but it drives Chromium, which has to be installed once with `npx playwright install chromium`. If you would rather not, pick the scrapecreators or apify backend and paste its key; both work with nothing else installed.\n\nA Meta Ad Library API token, free from Meta, unlocks EU spend, reach and demographics. Everything here reads a public archive: nothing writes, nothing posts, nothing touches an ad account.",
+  "author": {
+    "name": "Navid Moazzez",
+    "url": "https://navid.me"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thenavidm/facebook-ad-library-mcp-cli"
+  },
+  "homepage": "https://github.com/thenavidm/facebook-ad-library-mcp-cli",
+  "documentation": "https://github.com/thenavidm/facebook-ad-library-mcp-cli#readme",
+  "support": "https://github.com/thenavidm/facebook-ad-library-mcp-cli/issues",
+  "license": "MIT",
+  "keywords": [
+    "facebook",
+    "meta",
+    "ad-library",
+    "ads",
+    "competitor-research",
+    "mcp"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/index.js"
+      ],
+      "env": {
+        "FBADS_BACKEND": "${user_config.backend}",
+        "SCRAPECREATORS_API_KEY": "${user_config.scrapecreators_key}",
+        "APIFY_TOKEN": "${user_config.apify_token}",
+        "META_ADS_ARCHIVE_TOKEN": "${user_config.meta_token}"
+      }
+    }
+  },
+  "user_config": {
+    "backend": {
+      "type": "string",
+      "title": "Backend",
+      "description": "browser (free, needs Chromium installed once), scrapecreators or apify.",
+      "default": "browser",
+      "required": false
+    },
+    "scrapecreators_key": {
+      "type": "string",
+      "title": "ScrapeCreators API key",
+      "description": "Only for the scrapecreators backend.",
+      "sensitive": true,
+      "required": false
+    },
+    "apify_token": {
+      "type": "string",
+      "title": "Apify token",
+      "description": "Only for the apify backend.",
+      "sensitive": true,
+      "required": false
+    },
+    "meta_token": {
+      "type": "string",
+      "title": "Meta Ad Library API token",
+      "description": "Optional. Unlocks EU spend, reach and demographics. Free from Meta.",
+      "sensitive": true,
+      "required": false
+    }
+  },
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=20"
+    }
+  }
+}

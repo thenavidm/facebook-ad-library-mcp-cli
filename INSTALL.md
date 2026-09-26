@@ -104,7 +104,7 @@ The token the Explorer hands you is short-lived. For something that keeps workin
 ## Running it over HTTP
 
 ```bash
-npx -y @thenavidm/facebook-ad-library-mcp@latest --http --port 8787
+npx -y @thenavidm/facebook-ad-library-mcp-cli@latest --http --port 8787
 ```
 
 It binds to loopback by default. This server reads a public archive, so the risk of exposing it is not stolen data: it is handing anyone on your network a free browser to drive, or a provider key to spend.
@@ -118,7 +118,7 @@ If you need it reachable, set `FBADS_HTTP_TOKEN` and put it behind TLS.
 Run the built-in check first. It launches a browser, runs a real search, and reports what actually failed.
 
 ```bash
-npx -y @thenavidm/facebook-ad-library-mcp@latest doctor
+npx -y @thenavidm/facebook-ad-library-mcp-cli@latest doctor
 ```
 
 | Symptom | Cause and fix |

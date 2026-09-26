@@ -1,17 +1,19 @@
 <img src="https://cdn.navid.media/connectors/facebook-ad-library-icon.png" alt="Facebook Ad Library" width="88">
 
-# Facebook Ad Library MCP
+# Facebook Ad Library MCP Server & CLI
 
-[![Stars](https://img.shields.io/github/stars/thenavidm/facebook-ad-library-mcp?style=flat&logo=github&label=Stars)](https://github.com/thenavidm/facebook-ad-library-mcp)
+[![Stars](https://img.shields.io/github/stars/thenavidm/facebook-ad-library-mcp-cli?style=flat&logo=github&label=Stars)](https://github.com/thenavidm/facebook-ad-library-mcp-cli)
 [![License](https://img.shields.io/badge/License-MIT-blue)](./LICENSE)
-[![npm](https://img.shields.io/npm/v/@thenavidm/facebook-ad-library-mcp?color=orange&label=npm)](https://www.npmjs.com/package/@thenavidm/facebook-ad-library-mcp)
-[![Downloads](https://img.shields.io/npm/dm/@thenavidm/facebook-ad-library-mcp?color=green&label=downloads)](https://www.npmjs.com/package/@thenavidm/facebook-ad-library-mcp)
-[![CI](https://img.shields.io/github/actions/workflow/status/thenavidm/facebook-ad-library-mcp/ci.yml?branch=main&label=CI)](https://github.com/thenavidm/facebook-ad-library-mcp/actions)
+[![npm](https://img.shields.io/npm/v/@thenavidm/facebook-ad-library-mcp-cli?color=orange&label=npm)](https://www.npmjs.com/package/@thenavidm/facebook-ad-library-mcp-cli)
+[![Downloads](https://img.shields.io/npm/dm/@thenavidm/facebook-ad-library-mcp-cli?color=green&label=downloads)](https://www.npmjs.com/package/@thenavidm/facebook-ad-library-mcp-cli)
+[![CI](https://img.shields.io/github/actions/workflow/status/thenavidm/facebook-ad-library-mcp-cli/ci.yml?branch=main&label=CI)](https://github.com/thenavidm/facebook-ad-library-mcp-cli/actions)
 [![YouTube](https://img.shields.io/badge/YouTube-@thenavidm-red?logo=youtube&logoColor=white)](https://youtube.com/@thenavidm?sub_confirmation=1)
 [![X](https://img.shields.io/badge/X-@thenavidm-black?logo=x)](https://x.com/thenavidm)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-thenavidm-0A66C2?logo=linkedin&logoColor=white)](https://linkedin.com/in/thenavidm)
 
-Give any AI agent read access to every ad running on Facebook, Instagram, Messenger, Threads and Audience Network. Free, no API key, any country.
+Facebook Ad Library MCP server and CLI for Claude Code, Codex and AI agents. 9 tools that read every ad running on Facebook, Instagram, Messenger, Threads and Audience Network, for any advertiser in any country, free and with no API key.
+
+One install gives you both surfaces, the same 9 tools under the same names, reading one array of tool definitions so they cannot drift apart.
 
 Meta's Ad Library is the largest public archive of advertising creative in the world, and it is completely open. This puts it inside your agent.
 
@@ -23,9 +25,47 @@ Meta's Ad Library is the largest public archive of advertising creative in the w
 > points at a quiz funnel instead. They are moving from product-led to
 > problem-led, and the old ad is still running because it still works.
 
-Built by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp&utm_content=readme).
+Built by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp-cli&utm_content=readme).
 
 <img src="https://cdn.navid.media/repos/facebook-ad-library-mcp.gif?v=1" alt="Claude Code using the Facebook Ad Library MCP server" width="520">
+
+## Two ways to use it
+
+### Command line
+
+`facebook-ad-library-cli` runs every tool as a command. Agents that run
+commands, like Claude Code, Codex and OpenCode, use it on their own, and you can
+type the same commands in a terminal, a script or a cron job:
+
+```bash
+facebook-ad-library-cli                                   # every command, one line each
+facebook-ad-library-cli list-advertisers --query ridge    # find a brand's Page ID
+facebook-ad-library-cli search-ads --page-id 123456789 --country US
+facebook-ad-library-cli search-ads --query "wallet" --json --select ads.library_id,ads.days_active
+facebook-ad-library-cli ad-library-url --query "wallet" --country GB
+facebook-ad-library-cli <command> --help                  # what any command takes
+```
+
+Every command reads a public archive, so nothing needs `--confirm`. `--json`
+gives JSON, `--compact` puts it on one line, `--select` keeps only the fields
+you name, and `--agent` turns on all of it for a script. Exit codes are 0 ok,
+2 usage, 3 not found, 4 a rejected key, 5 upstream, 7 out of credits and 10 a
+backend that is not set up, so a script branches on the number.
+
+`facebook-ad-library-cli schema <command>` prints the exact JSON Schema an MCP
+client receives for that tool.
+
+### MCP server, for AI agents
+
+`facebook-ad-library-mcp` is what Claude Code, Claude Desktop, Cursor and the
+rest launch. You never run it by hand:
+
+```bash
+claude mcp add facebook-ad-library -- npx -y @thenavidm/facebook-ad-library-mcp-cli
+```
+
+In Claude Desktop, the [`.mcpb` extension](https://github.com/thenavidm/facebook-ad-library-mcp-cli/releases/latest)
+installs on a double click. Section 4 has every other client.
 
 ## Contents
 
@@ -58,7 +98,7 @@ Built by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&
 Node 20 or newer. Nothing else.
 
 ```bash
-npx -y @thenavidm/facebook-ad-library-mcp --version
+npx -y @thenavidm/facebook-ad-library-mcp-cli --version
 ```
 
 The free backend drives a real browser, so install Chromium once:
@@ -68,6 +108,13 @@ npx playwright install chromium
 ```
 
 That is the whole install. No account, no API key, no credential.
+
+For the CLI as a command you or your agent can run anywhere, install it once:
+
+```bash
+npm install -g @thenavidm/facebook-ad-library-mcp-cli
+facebook-ad-library-cli
+```
 
 ## 3. Setup 🔑
 
@@ -103,7 +150,7 @@ The long version, every step with what to do when one fails, is in [INSTALL.md](
 ### Claude Code
 
 ```bash
-claude mcp add facebook-ads -- npx -y @thenavidm/facebook-ad-library-mcp@latest
+claude mcp add facebook-ads -- npx -y @thenavidm/facebook-ad-library-mcp-cli@latest
 ```
 
 `--scope user` makes it available in every project rather than the current one.
@@ -114,10 +161,18 @@ With a provider key:
 claude mcp add facebook-ads \
   -e FBADS_BACKEND=scrapecreators \
   -e SCRAPECREATORS_API_KEY=xxx \
-  -- npx -y @thenavidm/facebook-ad-library-mcp@latest
+  -- npx -y @thenavidm/facebook-ad-library-mcp-cli@latest
 ```
 
 ### Claude Desktop
+
+The short way: download the [`.mcpb` extension](https://github.com/thenavidm/facebook-ad-library-mcp-cli/releases/latest)
+from the latest release and double-click it. It carries its own dependencies,
+and Claude Desktop asks which backend to use. The free browser backend still
+needs Chromium installed once with `npx playwright install chromium`; the
+scrapecreators and apify backends need only their key.
+
+The long way, if you would rather edit the config yourself:
 
 | Platform | Path |
 |---|---|
@@ -129,7 +184,7 @@ claude mcp add facebook-ads \
   "mcpServers": {
     "facebook-ads": {
       "command": "npx",
-      "args": ["-y", "@thenavidm/facebook-ad-library-mcp@latest"]
+      "args": ["-y", "@thenavidm/facebook-ad-library-mcp-cli@latest"]
     }
   }
 }
@@ -146,7 +201,7 @@ Quit Claude Desktop completely and reopen it.
 claude.ai runs connectors from Anthropic's cloud, not from your machine, so it needs a public HTTPS URL.
 
 ```bash
-npx -y @thenavidm/facebook-ad-library-mcp@latest --http --port 8000
+npx -y @thenavidm/facebook-ad-library-mcp-cli@latest --http --port 8000
 ```
 
 Host that somewhere with a public HTTPS URL, then in claude.ai: **Customize**, **Connectors**, **+**, **Add custom connector**. Paste the URL and click **Add**.
@@ -171,7 +226,7 @@ Note the free backend needs a real browser, so whatever hosts it must be able to
     "facebook-ads": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@thenavidm/facebook-ad-library-mcp@latest"]
+      "args": ["-y", "@thenavidm/facebook-ad-library-mcp-cli@latest"]
     }
   }
 }
@@ -184,7 +239,7 @@ Note the free backend needs a real browser, so whatever hosts it must be able to
 ```toml
 [mcp_servers.facebook-ads]
 command = "npx"
-args = ["-y", "@thenavidm/facebook-ad-library-mcp@latest"]
+args = ["-y", "@thenavidm/facebook-ad-library-mcp-cli@latest"]
 ```
 
 ### Gemini CLI
@@ -198,7 +253,7 @@ Any stdio MCP client takes the same three things: the command `npx`, the args, a
 ## 5. Check it worked 🩺
 
 ```bash
-npx -y @thenavidm/facebook-ad-library-mcp@latest doctor
+npx -y @thenavidm/facebook-ad-library-mcp-cli@latest doctor
 ```
 
 It launches a browser, runs a real search, and tells you whether ads came back.
@@ -274,6 +329,20 @@ An MCP server is a standard way to give an AI assistant real tools. Once this is
 </details>
 
 <details>
+<summary><b>What is the CLI?</b></summary>
+
+`facebook-ad-library-cli` is the same program as the MCP server, run as commands. AI agents that run commands, like Claude Code, Codex and OpenCode, use it on their own, and you can type the same commands in a terminal, a script or a cron job. Every tool is a command with dashes, so `search_ads` runs as `facebook-ad-library-cli search-ads`.
+
+</details>
+
+<details>
+<summary><b>Should I use the MCP server or the CLI?</b></summary>
+
+Use the MCP server in an app with no terminal, like Claude Desktop's chat. Use the CLI anywhere commands run: an agent like Claude Code, Codex or OpenCode, a script or a cron job. The MCP server sends its full tool list to the model on every turn, and the CLI costs nothing until it runs.
+
+</details>
+
+<details>
 <summary><b>Do I need a Facebook account?</b></summary>
 
 You do not need one. The Ad Library is public and this reads it without signing in to anything.
@@ -336,6 +405,37 @@ All of them. Pass any two-letter country code.
 
 </details>
 
+## Environment variables
+
+Credentials, all optional. The default browser backend needs none of them.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `FBADS_BACKEND` | `browser` | `browser` (free, drives Chromium), `scrapecreators` or `apify` |
+| `SCRAPECREATORS_API_KEY` | none | For the scrapecreators backend |
+| `APIFY_TOKEN` | none | For the apify backend |
+| `APIFY_ACTOR` | `lite` | `full` switches to the larger Apify actor |
+| `META_ADS_ARCHIVE_TOKEN` | none | Unlocks EU spend, reach and demographics. Free from Meta |
+
+Tuning.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `FBADS_HEADED` | off | `1` shows the browser, to see why a search came back empty |
+| `FBADS_HYDRATE_MS` | `9000` | How long to let the Ad Library page load |
+| `FBADS_SCROLL_WAIT_MS` | `4000` | Pause between scrolls while collecting ads |
+| `FBADS_RETRIES` | `1` | Retries when the browser comes back empty |
+| `FBADS_CACHE_DAYS` | `1` | How old a ScrapeCreators cached answer may be. `0` always fetches fresh |
+| `FBADS_STORE_DIR` | your app data folder | Where `diff_advertiser` keeps its snapshots |
+
+HTTP, for `--http` only.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `FBADS_HTTP_PORT` | `8787` | Port |
+| `FBADS_HTTP_HOST` | `127.0.0.1` | Interface to bind |
+| `FBADS_HTTP_TOKEN` | none | Bearer token for the endpoint |
+
 ## Dependencies
 
 | Package | License | Why |
@@ -346,7 +446,7 @@ All of them. Pass any two-letter country code.
 
 ## Questions
 
-Run into a problem or have a question? [Open an issue](https://github.com/thenavidm/facebook-ad-library-mcp/issues) and I will help.
+Run into a problem or have a question? [Open an issue](https://github.com/thenavidm/facebook-ad-library-mcp-cli/issues) and I will help.
 
 ## About the author 👋
 
@@ -354,8 +454,8 @@ Navid Moazzez is a leading AI business strategist, and the host of the AI Creato
 
 **Links**
 
-- Personal website: [navid.me](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp&utm_content=readme)
-- Navid Media: [navid.media](https://navid.media?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp&utm_content=readme)
+- Personal website: [navid.me](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp-cli&utm_content=readme)
+- Navid Media: [navid.media](https://navid.media?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp-cli&utm_content=readme)
 - YouTube: [@thenavidm](https://youtube.com/@thenavidm?sub_confirmation=1) and [@thenavidai](https://youtube.com/@thenavidai?sub_confirmation=1)
 - X: [@thenavidm](https://x.com/thenavidm)
 - Instagram: [@thenavidm](https://instagram.com/thenavidm)
@@ -371,4 +471,4 @@ Not affiliated with, endorsed by, or connected to Meta Platforms, Inc.
 
 ---
 
-© 2026 [NM Media](https://navid.media?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp&utm_content=readme). Made with ❤️ by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp&utm_content=readme).
+© 2026 [NM Media](https://navid.media?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp-cli&utm_content=readme). Made with ❤️ by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp-cli&utm_content=readme).

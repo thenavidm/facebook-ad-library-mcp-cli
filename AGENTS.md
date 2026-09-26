@@ -4,7 +4,7 @@ For agents editing this repo. Users read `README.md`; models driving the server 
 
 ## What this is
 
-An MCP server that reads Meta's public Ad Library. TypeScript, Node 20+, ESM, published as `@thenavidm/facebook-ad-library-mcp`.
+An MCP server that reads Meta's public Ad Library. TypeScript, Node 20+, ESM, published as `@thenavidm/facebook-ad-library-mcp-cli`.
 
 Every tool is read-only. There is no write path, so there is no confirm gating and no audit log, unlike the other servers in this family. Do not add one "for consistency": the safety model here is that the server cannot act at all.
 
