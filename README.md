@@ -67,6 +67,35 @@ claude mcp add facebook-ad-library -- npx -y @thenavidm/facebook-ad-library-mcp-
 In Claude Desktop, the [`.mcpb` extension](https://github.com/thenavidm/facebook-ad-library-mcp-cli/releases/latest)
 installs on a double click. Section 4 has every other client.
 
+### What each costs
+
+Both surfaces are the same program with the same 9 tools. The
+difference is when the model pays for them. Measured in Claude Code:
+
+| | MCP server | CLI |
+|---|---|---|
+| Every message, with every tool loaded | 4,200 tokens | nothing |
+| Every message, Claude Code's default | 740 tokens | nothing |
+| When the Ad Library comes up | nothing more, or the tools it picks | 3,400 tokens for `SKILL.md`, once |
+| 20 messages with the Ad Library in 1, every tool loaded | 84,000 tokens | 3,400 tokens |
+
+Claude Code's [tool search](https://code.claude.com/docs/en/mcp#scale-with-mcp-tool-search)
+is on by default: it sends only the tool names and the server instructions,
+and loads a tool's full definition when the model reaches for it. An app that
+loads every tool up front pays the first line on every message, whether
+the Ad Library comes up or not. With the skill added, Claude Code also lists its
+one-line description, about 170 tokens.
+
+To spend less, turn the server off when you are not using it, which in Claude
+Code is the `/mcp` panel.
+Or install the CLI and add the server on the days it earns its place.
+
+Measured on 2026-09-27 with Claude Code 2.1.257 on Claude Opus 5: one
+short prompt with and without the server connected, once with
+`ENABLE_TOOL_SEARCH=false` and once with the default, the difference read
+from the API's own usage figures. `SKILL.md` was measured the same way. Other
+apps and models count tokens a little differently.
+
 ## Contents
 
 | | Section | |
@@ -278,6 +307,7 @@ Every tool is read-only. This server cannot post, cannot spend, and cannot reach
 | `get_eu_transparency` | Spend, reach and demographics. EU and political ads only. |
 | `transcribe_ad` | Speech to text on a video ad. Needs the `scrapecreators` backend. |
 | `backend_status` | Which backend is active and whether it costs money. |
+| `view_ad_creative` | The ad's actual images, so the model can see them rather than only read the copy. |
 | `ad_library_url` | Turn filters into a URL a person can open and check. |
 
 Plus two prompts, `competitor-teardown` and `creative-angles`, and two resources so a client can read the config and the Ad Library's own concepts without spending a tool call.
@@ -338,7 +368,7 @@ An MCP server is a standard way to give an AI assistant real tools. Once this is
 <details>
 <summary><b>Should I use the MCP server or the CLI?</b></summary>
 
-Use the MCP server in an app with no terminal, like Claude Desktop's chat. Use the CLI anywhere commands run: an agent like Claude Code, Codex or OpenCode, a script or a cron job. The MCP server sends its full tool list to the model on every turn, and the CLI costs nothing until it runs.
+Use the MCP server in an app with no terminal, like Claude Desktop's chat. Use the CLI anywhere commands run: an agent like Claude Code, Codex or OpenCode, a script or a cron job. The MCP server's tools take up context on every message, and the CLI costs nothing until it runs.
 
 </details>
 
@@ -373,7 +403,7 @@ Only for EU-delivered ads and political ads, through `get_eu_transparency`. For 
 <details>
 <summary><b>Can it tell me which of their ads performs best?</b></summary>
 
-It does not. and nothing can. You can see which have run longest, which is a reasonable proxy and not the same thing.
+No, and nothing can. You can see which have run longest, which is a reasonable proxy and not the same thing.
 
 </details>
 
@@ -387,7 +417,7 @@ It is a catalogue ad. Meta fills those tokens per product at delivery. That is t
 <details>
 <summary><b>Can I run it on a server?</b></summary>
 
-It does. with `--http`. The free backend needs Chromium available; a provider backend is easier to host.
+Yes, with `--http`. The free backend needs Chromium available, and a provider backend is easier to host.
 
 </details>
 
