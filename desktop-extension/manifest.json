@@ -2,7 +2,7 @@
   "manifest_version": "0.2",
   "name": "facebook-ad-library",
   "display_name": "Facebook Ad Library",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Facebook Ad Library MCP server and CLI for Claude Code, Codex and AI agents. 9 tools that read every ad running on Facebook, Instagram, Messenger, Threads and Audience Network, for any advertiser in any country, free and with no API key.",
   "long_description": "Reads Meta's public Ad Library: every ad running on Facebook, Instagram, Messenger, Threads and Audience Network, for any advertiser, in any country.\n\nThe free browser backend needs no key, but it drives Chromium, which has to be installed once with `npx playwright install chromium`. If you would rather not, pick the scrapecreators or apify backend and paste its key; both work with nothing else installed.\n\nA Meta Ad Library API token, free from Meta, unlocks EU spend, reach and demographics. Everything here reads a public archive: nothing writes, nothing posts, nothing touches an ad account.",
   "author": {

@@ -2,11 +2,15 @@
 
 | Component | Version | Last Updated |
 |-----------|---------|--------------|
-| facebook-ad-library-mcp-cli | 0.5.0 | 2026-09-26 |
+| facebook-ad-library-mcp-cli | 0.5.1 | 2026-10-04 |
 
 ---
 
 What changed, newest first, in terms of what it means for someone using it.
+
+## 0.5.1, 2026-10-04
+
+- **`npx -y @thenavidm/facebook-ad-library-mcp-cli` starts the MCP server whatever order npm keeps.** npx starts whichever binary the npm registry lists first when they share one file, and the registry does not keep the published order. For this package that happened to be the server; for 23 others it was the CLI. A third binary named after the package, on its own file, now always starts the server, and npx picks it by name.
 
 ## 0.5.0
 
