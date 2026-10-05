@@ -2,8 +2,8 @@
 
 | Component | Version | Last Updated |
 |-----------|---------|--------------|
-| facebook-ad-library-mcp-cli | 0.6.0 | 2026-10-05 |
-| Slipway | ^0.1.12 | 2026-10-05 |
+| facebook-ad-library-mcp-cli | 0.6.1 | 2026-10-05 |
+| Slipway | ^0.1.17 | 2026-10-05 |
 | MCP TypeScript SDK, through Slipway | 2.3.0 | 2026-10-05 |
 | Playwright, optional | ^1.62.1 | 2026-10-04 |
 | Node | >= 22 | 2026-10-05 |
@@ -11,6 +11,11 @@
 ---
 
 What changed, newest first, in terms of what it means for someone using it.
+
+## 0.6.1, 2026-10-05
+
+- **Built on Slipway 0.1.17**, which a fresh install of 0.6.0 already used. Since the Slipway 0.6.0 was measured on, 0.1.12, `which` also reads a tool's argument names and prints a title once where a description opens with it, and the general help names the settings that connect an account and the safety switches and counts the rest, which `agent-context` describes one by one. [Slipway's changelog](https://github.com/thenavidm/slipway/blob/main/CHANGELOG.md) lists the rest.
+- **A test checks that every setting is named in `--help` or described by `agent-context`**, where it asked `--help` to name each one.
 
 ## 0.6.0, 2026-10-05
 
