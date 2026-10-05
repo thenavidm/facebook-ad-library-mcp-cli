@@ -2,11 +2,33 @@
 
 | Component | Version | Last Updated |
 |-----------|---------|--------------|
-| facebook-ad-library-mcp-cli | 0.5.1 | 2026-10-04 |
+| facebook-ad-library-mcp-cli | 0.6.0 | 2026-10-05 |
+| Slipway | ^0.1.12 | 2026-10-05 |
+| MCP TypeScript SDK, through Slipway | 2.3.0 | 2026-10-05 |
+| Playwright, optional | ^1.62.1 | 2026-10-04 |
+| Node | >= 22 | 2026-10-05 |
 
 ---
 
 What changed, newest first, in terms of what it means for someone using it.
+
+## 0.6.0, 2026-10-05
+
+Built on [Slipway](https://github.com/thenavidm/slipway) 0.1.12. The nine tools keep their names, arguments and output schemas, and every difference below was measured against 0.5.1, the last version on npm, before release.
+
+- **A smaller tool list.** 3,894 tokens in Claude Code with every tool loaded, down from 4,190: the per-tool `$schema` lines on input and output and `additionalProperties: false` are gone. The resources now say their type.
+- **A provider backend missing its key exits 10 and says what to set.** With `FBADS_BACKEND=scrapecreators` set and no `SCRAPECREATORS_API_KEY`, 0.5.1's MCP server would not start, and every command stopped with exit 1 and a bare message. The server now starts, and each call exits 10 with a hint naming the variable to set.
+- **Exit codes keep 0.5's rules**, read from the provider's message as before, with the provider's hint and the backend in the error. A bug in this code now exits 1 instead of 5.
+- **The CLI still closes Chromium after its one call**, and the server keeps it open between calls, as 0.5 did.
+- **`which <words>` finds a command**, and `agent-context` describes every command, flag and setting as JSON. In Codex 0.159.3, finding the command that turns a brand into its Page ID took 82,997 input tokens over the CLI instead of 83,018 (median of five).
+- **`install <client>`** adds the server to Claude Code, Codex, Claude Desktop, Cursor, VS Code or Gemini CLI in each one's own format, and `--http` gains `FBADS_HTTP_ALLOWED_ORIGINS`.
+- **Less work to start.** The entry turns on Node's compile cache, and the server spends 148 ms of CPU before its first answer where 0.5.1 spent 182 (median of 21 runs, taking turns on one busy Mac). npx installs 6 dependencies instead of 96, Playwright among them.
+- **The release carries the desktop extension.**
+- **Docs fixes.** The README has Features and Which one tables, nine tools where the contents said eight, a numbered FAQ with two more answers, the icon and the terminal recording on cdn.navid.me, and American spelling throughout; THIRD_PARTY_NOTICES.md lists the production dependencies' licenses.
+
+### Upgrading
+
+Node 22 or newer; 0.5 ran on 20. Exit codes are unchanged except that a missing provider key exits 10 instead of 1, and an internal bug exits 1 instead of 5. A script that pipes JSON-RPC into the server must keep stdin open until it reads the answer: the server now stops when its input ends, as the MCP stdio binding asks. Some terminal screens grew: the general help by 42 tokens, for `which`, `install`, the flags and the exit codes it now lists; the command list by 25, for the lines that point to `which` and `--help`.
 
 ## 0.5.1, 2026-10-04
 

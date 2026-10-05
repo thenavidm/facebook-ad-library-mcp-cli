@@ -1,22 +1,18 @@
 /**
- * `facebook-ad-library-mcp doctor`
+ * `facebook-ad-library-cli doctor`
  *
  * The command someone runs when a tool came back empty and they cannot tell
  * whether the problem is their setup, Meta, or the search itself. It answers
- * that without needing an MCP client attached.
- *
- * Exit code 0 means usable. 1 means something needs fixing.
+ * that without needing an MCP client attached. Slipway runs these on every
+ * `doctor`, as 0.5 did, after its own checks.
  */
 
-import { loadConfig } from "./config.js";
+import type { DoctorCheck } from "@thenavidm/slipway";
 import { buildUrl } from "./adlibrary/url.js";
 import { inlinePayloads, parsePayloads } from "./adlibrary/harvest.js";
+import type { ToolContext } from "./tools/kit.js";
 
 type Check = { label: string; ok: boolean; detail: string };
-
-function line(check: Check): string {
-  return `${check.ok ? "  ok  " : " fix  "} ${check.label}\n       ${check.detail}\n`;
-}
 
 async function checkPlaywright(): Promise<Check> {
   try {
@@ -89,8 +85,7 @@ async function checkLiveRead(): Promise<Check> {
   }
 }
 
-export async function runDoctor(): Promise<number> {
-  const config = loadConfig();
+export async function doctor({ config }: ToolContext): Promise<DoctorCheck[]> {
   const checks: Check[] = [];
 
   checks.push({
@@ -129,12 +124,6 @@ export async function runDoctor(): Promise<number> {
       : "Not set. Optional: everything works without it except get_eu_transparency.",
   });
 
-  process.stdout.write(`facebook-ad-library-mcp doctor\n\n${checks.map(line).join("")}\n`);
-  const failed = checks.filter((c) => !c.ok);
-  process.stdout.write(
-    failed.length === 0
-      ? "Everything checks out.\n"
-      : `${failed.length} thing${failed.length === 1 ? "" : "s"} to fix, listed above.\n`,
-  );
-  return failed.length === 0 ? 0 : 1;
+  // The archive token is optional, so a missing one is a note rather than a fault.
+  return checks.map(({ label, ok, detail }) => ({ name: label, ok, detail, ...(label === "META_ADS_ARCHIVE_TOKEN" && !config.archiveToken ? { warn: true } : {}) }));
 }

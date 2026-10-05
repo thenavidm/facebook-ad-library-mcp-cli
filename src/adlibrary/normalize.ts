@@ -138,7 +138,7 @@ function daysBetween(startIso: string, endIso: string | undefined): number | und
   return Math.max(0, Math.floor((end - start) / 86_400_000));
 }
 
-/** Normalise one `collated_results` entry from Meta's Ad Library GraphQL. */
+/** Normalize one `collated_results` entry from Meta's Ad Library GraphQL. */
 export function adFromGraphql(node: Json, source: BackendName = "browser"): Ad {
   const snapshot = obj(node["snapshot"]) ?? {};
   const linkUrl = unwrapRedirect(str(snapshot["link_url"]));

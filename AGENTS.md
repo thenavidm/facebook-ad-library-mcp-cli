@@ -4,7 +4,7 @@ For agents editing this repo. Users read `README.md`; models driving the server 
 
 ## What this is
 
-An MCP server that reads Meta's public Ad Library. TypeScript, Node 20+, ESM, published as `@thenavidm/facebook-ad-library-mcp-cli`.
+An MCP server that reads Meta's public Ad Library. TypeScript, Node 22+, ESM, on [Slipway](https://github.com/thenavidm/slipway), published as `@thenavidm/facebook-ad-library-mcp-cli`.
 
 Every tool is read-only. There is no write path, so there is no confirm gating and no audit log, unlike the other servers in this family. Do not add one "for consistency": the safety model here is that the server cannot act at all.
 
@@ -31,7 +31,8 @@ Reading only the second is why the first search intermittently returned nothing.
 | `src/backends/` | the three backends behind one interface |
 | `src/format/ads.ts` | shaping ads for a model: compact in lists, complete in detail |
 | `src/store/snapshots.ts` | JSON snapshots, only for `diff_advertiser` |
-| `src/tools/` | one module per group, `kit.ts` is the registration plumbing |
+| `src/tools/` | one module per group; `kit.ts` adapts them to Slipway, maps provider errors to exit codes, and closes the browser after a CLI call |
+| `src/app.ts` | the Slipway app: tools, settings, resources, prompts, doctor. Slipway owns MCP, the CLI, `--http` and annotations |
 
 ## Rules specific to this repo
 
@@ -46,7 +47,7 @@ Reading only the second is why the first search intermittently returned nothing.
 **Pin nothing from memory.** The Graph API version, the SDK version, the action versions and the provider endpoints were each verified by a live probe. Re-probe rather than recall:
 
 ```bash
-npm view @modelcontextprotocol/sdk version
+npm view @thenavidm/slipway version
 curl -s "https://graph.facebook.com/v26.0/ads_archive?ad_reached_countries=%5B%22DE%22%5D"
 curl -sL https://api.github.com/repos/actions/checkout/releases/latest | grep tag_name
 ```

@@ -1,13 +1,28 @@
 /**
- * Shared plumbing every tool uses.
+ * Shared plumbing every tool uses, now on Slipway.
  *
- * Registering tools by hand is a chance per tool to forget an annotation, leak
- * a stack trace, or return a shape the model cannot read. This wraps that once
- * so a tool module only describes what it actually does.
+ * Tool modules keep describing themselves with a Zod shape and a handler. This
+ * adapter turns each into a Slipway tool, so the MCP server, the CLI,
+ * annotations and errors all come from the framework instead of a copy kept in
+ * this repo.
  */
 
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z, type ZodRawShape } from "zod";
+import {
+  ApiError,
+  AuthError,
+  NotConfiguredError,
+  NotFoundError,
+  RateLimitError,
+  SlipwayError,
+  UsageError,
+  content,
+  image,
+  text,
+  toolkit,
+  z,
+  type ContentResult,
+  type Tool,
+} from "@thenavidm/slipway";
 import type { Backend } from "../adlibrary/types.js";
 import type { Config } from "../config.js";
 import { AdLibraryError } from "../errors.js";
@@ -20,69 +35,58 @@ export type ToolContext = {
   store: SnapshotStore;
 };
 
+const kit = toolkit<ToolContext>();
+
 /** The context every tool call gets, built one way for both surfaces. */
 export function makeContext(config: Config): ToolContext {
   return { backend: createBackend(config), config, store: new SnapshotStore(config.storeDir) };
 }
 
-export type ContentBlock =
-  | { type: "text"; text: string }
-  | { type: "image"; data: string; mimeType: string };
+/** What a tool that builds its own result returns: content blocks, with the data alongside. */
+export type ToolResult = ContentResult;
 
-export type ToolResult = {
-  content: ContentBlock[];
-  structuredContent?: Record<string, unknown>;
-  isError?: boolean;
-};
-
-/**
- * Both shapes, every time.
- *
- * `structuredContent` is what a client renders as a table or a card, and it is
- * only sent when the tool declares an `outputSchema`. `content` stays populated
- * because a client that ignores structured output would otherwise show nothing
- * at all, and because the model reads it directly.
- */
-export function ok(data: unknown, structured = true): ToolResult {
-  const text = typeof data === "string" ? data : JSON.stringify(data, null, 2);
-  const result: ToolResult = { content: [{ type: "text" as const, text }] };
-  if (structured && data && typeof data === "object" && !Array.isArray(data)) {
-    result.structuredContent = data as Record<string, unknown>;
-  }
-  return result;
-}
-
-/**
- * Errors come back as a normal result with `isError`, not a thrown exception.
- *
- * A thrown MCP error reaches the model as a protocol failure with no structure.
- * A result it can read tells it what went wrong and usually how to fix it,
- * which is the difference between a correct retry and a give-up. Verified
- * against a real client handshake rather than assumed.
- */
 /**
  * A result carrying real images alongside the text.
  *
  * The text block still goes first so a client that ignores images, and the
  * model itself, still get the context: which advertiser, which ad, what the
- * copy said. The images follow in the same order they are described.
+ * copy said. The images follow in the same order they are described. A
+ * terminal cannot show them, so the CLI prints the text and one line per image.
  */
 export function okWithImages(data: unknown, images: { data: string; mimeType: string }[]): ToolResult {
-  const text = typeof data === "string" ? data : JSON.stringify(data, null, 2);
-  return {
-    content: [
-      { type: "text" as const, text },
-      ...images.map((i) => ({ type: "image" as const, data: i.data, mimeType: i.mimeType })),
-    ],
-  };
+  const body = typeof data === "string" ? data : JSON.stringify(data);
+  return content([text(body), ...images.map((i) => image(i.data, i.mimeType))]);
 }
 
-export function fail(error: unknown): ToolResult {
-  const payload =
-    error instanceof AdLibraryError
-      ? error.toJSON()
-      : { error: (error as Error)?.message ?? String(error) };
-  return { content: [{ type: "text", text: JSON.stringify(payload, null, 2) }], isError: true };
+/**
+ * 0.5 picked an exit code by reading the message, and a provider's error
+ * carries no status, so the same words decide here: a call made wrong is 2,
+ * setup still to do 10, a rejected key 4, a provider out of credits or rate
+ * limiting 7, an ad that is not there 3, and anything else upstream, 5. A bug
+ * in this code stays 1. The provider's own hint and the backend ride along.
+ */
+type ErrorOptions = NonNullable<ConstructorParameters<typeof ApiError>[1]>;
+
+const RULES: Array<[RegExp, new (message: string, options?: ErrorOptions) => SlipwayError]> = [
+  [/^pass either|unknown backend/, UsageError],
+  [/not configured|no [a-z ]*token is configured|needs (a|an) (token|api key)|not installed/, NotConfiguredError],
+  [/rejected the|\(401\)|\(403\)|refused the run|error 190/, AuthError],
+  [/out of credits|insufficient credit|\(402\)|\(429\)|rate ?limit/, RateLimitError],
+  [/not found|no ad with/, NotFoundError],
+];
+
+const BUGS = new Set<unknown>([TypeError, ReferenceError, RangeError]);
+
+export function toSlipway(error: unknown): unknown {
+  if (error instanceof SlipwayError || !(error instanceof Error) || BUGS.has(error.constructor)) return error;
+  const options: ErrorOptions = {
+    cause: error,
+    ...(error instanceof AdLibraryError && error.hint ? { hint: error.hint } : {}),
+    ...(error instanceof AdLibraryError && error.backend ? { details: { backend: error.backend } } : {}),
+  };
+  const words = error.message.toLowerCase();
+  for (const [pattern, Kind] of RULES) if (pattern.test(words)) return new Kind(error.message, options);
+  return new ApiError(error.message, options);
 }
 
 /** Filters shared by every tool that searches. Described once, reused everywhere. */
@@ -119,7 +123,9 @@ export const searchArgs = {
     .describe("How many ads to return. On the browser backend a higher number costs more time."),
 };
 
-export type ToolSpec<S extends ZodRawShape, O extends ZodRawShape = ZodRawShape> = {
+type Shape = Record<string, z.ZodType>;
+
+export type ToolSpec<S extends Shape, O extends Shape = Shape> = {
   name: string;
   /** One line, imperative. Shown in tool pickers. */
   title: string;
@@ -130,7 +136,7 @@ export type ToolSpec<S extends ZodRawShape, O extends ZodRawShape = ZodRawShape>
   /**
    * Set when the handler builds its own result, for the tools that return
    * something other than JSON. Images, mainly: those go back as content blocks
-   * and cannot be serialised into one object.
+   * and cannot be serialized into one object.
    */
   returnsContent?: boolean;
   /**
@@ -142,57 +148,31 @@ export type ToolSpec<S extends ZodRawShape, O extends ZodRawShape = ZodRawShape>
   handler: (args: z.infer<z.ZodObject<S>>, ctx: ToolContext) => Promise<unknown>;
 };
 
-export function defineTool<S extends ZodRawShape, O extends ZodRawShape = ZodRawShape>(
-  spec: ToolSpec<S, O>,
-): ToolSpec<S, O> {
-  return spec;
-}
+export type AnyToolSpec = Tool<ToolContext>;
 
-/**
- * A tool of any shape, for the one place tools are collected into a list.
- *
- * `ToolSpec` is generic over its schema, so a list of tools with different
- * schemas has no single type: each handler takes a different argument shape and
- * function parameters are contravariant. The safety that matters lives inside
- * each `defineTool` call, where schema and handler are checked against each
- * other. This only loosens the seam where they are collected.
- */
-export type AnyToolSpec = Omit<ToolSpec<ZodRawShape, ZodRawShape>, "handler"> & {
-  handler: (args: never, ctx: ToolContext) => Promise<unknown>;
-};
-
-export function register(
-  server: McpServer,
-  contextFor: () => ToolContext,
-  spec: AnyToolSpec,
-): void {
-  server.registerTool(
-    spec.name,
-    {
-      title: spec.title,
-      description: spec.description,
-      inputSchema: spec.schema,
-      ...(spec.outputSchema ? { outputSchema: spec.outputSchema } : {}),
-      annotations: {
-        title: spec.title,
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: spec.touchesNetwork !== false,
-      },
-    },
-    // The SDK derives its callback type from the schema generic. This wrapper is
-    // generic over the same shape, but TypeScript cannot prove the two equal
-    // through the indirection, so the cast lives at this single boundary rather
-    // than in every tool definition.
-    (async (args: Record<string, unknown>) => {
+export function defineTool<S extends Shape, O extends Shape = Shape>(spec: ToolSpec<S, O>): Tool<ToolContext> {
+  const handler = spec.handler as (args: Record<string, unknown>, ctx: ToolContext) => Promise<unknown>;
+  return kit.defineTool({
+    name: spec.name,
+    title: spec.title,
+    description: spec.description,
+    input: z.object(spec.schema as Shape),
+    ...(spec.outputSchema ? { output: z.object(spec.outputSchema as Shape) } : {}),
+    risk: "read",
+    idempotent: true,
+    openWorld: spec.touchesNetwork !== false,
+    handler: async (args, ctx) => {
       try {
-        const result = await spec.handler(args as never, contextFor());
-        if (spec.returnsContent) return result as ToolResult;
-        return ok(result, Boolean(spec.outputSchema));
+        // The output schema, when there is one, was declared beside this handler and is checked at run time.
+        return (await handler(args, ctx)) as never;
       } catch (error) {
-        return fail(error);
+        throw toSlipway(error);
+      } finally {
+        // A command makes one call, and an open Chromium would keep the process
+        // alive after it, so the CLI closes the backend each time, as 0.5 did.
+        // The server keeps it open between calls.
+        if (ctx.surface === "cli") await ctx.backend.close().catch(() => undefined);
       }
-    }) as never,
-  );
+    },
+  });
 }

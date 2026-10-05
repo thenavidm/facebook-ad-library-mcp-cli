@@ -1,4 +1,4 @@
-<img src="https://cdn.navid.media/connectors/facebook-ad-library-icon.png" alt="Facebook Ad Library" width="88">
+<img src="https://cdn.navid.me/connectors/facebook-ad-library-icon.png" alt="Facebook Ad Library" width="88">
 
 # Facebook Ad Library MCP Server & CLI
 
@@ -25,9 +25,9 @@ Meta's Ad Library is the largest public archive of advertising creative in the w
 > points at a quiz funnel instead. They are moving from product-led to
 > problem-led, and the old ad is still running because it still works.
 
-Built by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp-cli&utm_content=readme).
+Built by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp-cli&utm_content=readme). Built on [Slipway](https://github.com/thenavidm/slipway), which turns one definition of each tool into the MCP server and the CLI.
 
-<img src="https://cdn.navid.media/repos/facebook-ad-library-mcp.gif?v=1" alt="Claude Code using the Facebook Ad Library MCP server" width="520">
+<img src="https://cdn.navid.me/repos/facebook-ad-library-mcp.gif" alt="Claude Code using the Facebook Ad Library MCP server" width="520">
 
 ## Two ways to use it
 
@@ -48,14 +48,15 @@ facebook-ad-library-cli <command> --help                  # what any command tak
 
 Every command reads a public archive, so nothing needs `--confirm`. `--json`
 gives JSON, `--compact` puts it on one line, `--select` keeps only the fields
-you name, and `--agent` turns on all of it for a script. Exit codes are 0 ok,
-2 usage, 3 not found, 4 a rejected key, 5 upstream, 7 out of credits and 10 a
-backend that is not set up, so a script branches on the number.
+you name, and `--agent` is compact JSON with no prompts. Exit codes are 0 ok,
+1 an unexpected error, 2 usage, 3 not found, 4 a rejected key, 5 upstream, 7 out
+of credits and 10 a backend that is not set up, so a script branches on the
+number.
 
 `facebook-ad-library-cli schema <command>` prints the exact JSON Schema an MCP
 client receives for that tool.
 
-### MCP server, for AI agents
+### MCP server, for your AI app
 
 `facebook-ad-library-mcp` is what Claude Code, Claude Desktop, Cursor and the
 rest launch. You never run it by hand:
@@ -67,17 +68,28 @@ claude mcp add facebook-ad-library -- npx -y @thenavidm/facebook-ad-library-mcp-
 In Claude Desktop, the [`.mcpb` extension](https://github.com/thenavidm/facebook-ad-library-mcp-cli/releases/latest)
 installs on a double click. Section 4 has every other client.
 
+### Which one
+
+| Where you are | What you can reach |
+|---|---|
+| An agent that can run shell commands, like Claude Code or Cursor | Both. The CLI is the cheaper one: it costs nothing until you type it |
+| claude.ai, the Claude Desktop chat tab, or a phone | The server only. There is no shell to run a command in |
+| A terminal, a script, cron or CI | The CLI only. There is no MCP client in a shell |
+
+They are the same program reading the same tool definitions, so anything one can
+do, the other can.
+
 ### What each costs
 
 Both surfaces are the same program with the same 9 tools. The
 difference is when the model pays for them. Measured in Claude Code:
 
-| | MCP server | CLI |
+| Cost | MCP server | CLI |
 |---|---|---|
-| Every message, with every tool loaded | 4,200 tokens | nothing |
+| Every message, with every tool loaded | 3,900 tokens | nothing |
 | Every message, Claude Code's default | 740 tokens | nothing |
 | When the Ad Library comes up | nothing more, or the tools it picks | 3,400 tokens for `SKILL.md`, once |
-| 20 messages with the Ad Library in 1, every tool loaded | 84,000 tokens | 3,400 tokens |
+| 20 messages with the Ad Library in 1, every tool loaded | 78,000 tokens | 3,400 tokens |
 
 Claude Code's [tool search](https://code.claude.com/docs/en/mcp#scale-with-mcp-tool-search)
 is on by default: it sends only the tool names and the server instructions,
@@ -90,25 +102,52 @@ To spend less, turn the server off when you are not using it, which in Claude
 Code is the `/mcp` panel.
 Or install the CLI and add the server on the days it earns its place.
 
-Measured on 2026-09-27 with Claude Code 2.1.257 on Claude Opus 5: one
+Measured on 2026-10-05 with Claude Code 2.1.286 on Claude Opus 5.5: one
 short prompt with and without the server connected, once with
 `ENABLE_TOOL_SEARCH=false` and once with the default, the difference read
 from the API's own usage figures. `SKILL.md` was measured the same way. Other
 apps and models count tokens a little differently.
 
+Against 0.5.1, measured the same day: every tool loaded costs 3,894 tokens
+instead of 4,190, tool search 737 against 735, within what two runs of the
+same build vary by, and `SKILL.md` the same within 4 tokens. In Codex 0.159.3
+on gpt-6.1-sol, the same task, "find the command that turns a brand name into
+the advertiser's Facebook Page ID, and the flags it requires", read a median of
+82,997 input tokens on 0.6.0 against 83,018 on 0.5.1 over the CLI, and 45,167
+against 45,180 over MCP, five runs each. Codex prints the tool list with a
+script and reads it, 5,839 tokens on both versions.
+
+## Features
+
+Every tool is both a command and an MCP tool, with the same name. The command
+is the tool name with dashes.
+
+| Capability | CLI command | MCP tool |
+|---|---|---|
+| Search ads by keyword or advertiser | `facebook-ad-library-cli search-ads` | `search_ads` |
+| Find a brand's Page ID | `facebook-ad-library-cli list-advertisers` | `list_advertisers` |
+| Read one ad in full, or look at its images | `facebook-ad-library-cli get-ad` / `view-ad-creative` | `get_ad` / `view_ad_creative` |
+| Transcribe a video ad | `facebook-ad-library-cli transcribe-ad` | `transcribe_ad` |
+| See what an advertiser started and stopped | `facebook-ad-library-cli diff-advertiser` | `diff_advertiser` |
+| EU spend, reach and demographics | `facebook-ad-library-cli get-eu-transparency` | `get_eu_transparency` |
+| A link a person can open | `facebook-ad-library-cli ad-library-url` | `ad_library_url` |
+| Check your setup | `facebook-ad-library-cli doctor` | `backend_status` |
+
+All nine are in [section 6](#6-tools-%EF%B8%8F).
+
 ## Contents
 
-| | Section | |
+| # | Section | What is in it |
 |---|---|---|
 | 1 | [What you can ask it](#1-what-you-can-ask-it-) | Real prompts, not features |
 | 2 | [Quick install](#2-quick-install-) | One command, no account |
 | 3 | [Setup](#3-setup-) | Optional, and why you probably do not need it |
 | 4 | [Connect your client](#4-connect-your-client-) | Every client, copy and paste |
 | 5 | [Check it worked](#5-check-it-worked-) | `doctor`, and what actually fails |
-| 6 | [Tools](#6-tools-%EF%B8%8F) | All eight, and what each reaches |
+| 6 | [Tools](#6-tools-%EF%B8%8F) | All nine, and what each reaches |
 | 7 | [How it works](#7-how-it-works-%EF%B8%8F) | Why it returns more than a scraper |
 | 8 | [Limits, honestly](#8-limits-honestly-) | What no source can tell you |
-| | [FAQ](#faq-) | |
+| 9 | [FAQ](#9-faq-) | Including what an MCP server is |
 
 ## 1. What you can ask it 💬
 
@@ -124,7 +163,7 @@ apps and models count tokens a little differently.
 
 ## 2. Quick install ⚡
 
-Node 20 or newer. Nothing else.
+Node 22 or newer. Nothing else.
 
 ```bash
 npx -y @thenavidm/facebook-ad-library-mcp-cli --version
@@ -233,7 +272,7 @@ claude.ai runs connectors from Anthropic's cloud, not from your machine, so it n
 npx -y @thenavidm/facebook-ad-library-mcp-cli@latest --http --port 8000
 ```
 
-Host that somewhere with a public HTTPS URL, then in claude.ai: **Customize**, **Connectors**, **+**, **Add custom connector**. Paste the URL and click **Add**.
+Host that somewhere with a public HTTPS URL, then in claude.ai: **Customize**, **Connectors**, **+**, **Add custom connector**. Paste the URL and click **Add**. A page from another site is refused unless `FBADS_HTTP_ALLOWED_ORIGINS` lists it.
 
 Note the free backend needs a real browser, so whatever hosts it must be able to run Chromium. A provider backend is the easier choice for a hosted deployment.
 
@@ -278,6 +317,14 @@ args = ["-y", "@thenavidm/facebook-ad-library-mcp-cli@latest"]
 ### Everything else
 
 Any stdio MCP client takes the same three things: the command `npx`, the args, and an optional env block.
+
+Or let the CLI write the entry, in each client's own format:
+
+```bash
+npx -y -p @thenavidm/facebook-ad-library-mcp-cli facebook-ad-library-cli install claude-code
+```
+
+It takes `claude-code`, `codex`, `claude-desktop`, `cursor`, `vscode` or `gemini`, and `--dry-run` shows the change first.
 
 ## 5. Check it worked 🩺
 
@@ -349,7 +396,7 @@ What you can infer is longevity. An ad running six months is probably working, b
 
 **Creative URLs expire.** Meta's CDN links are short-lived. Download what you want to keep, when you find it.
 
-## FAQ ❓
+## 9. FAQ ❓
 
 <details>
 <summary><b>What is an MCP server?</b></summary>
@@ -410,7 +457,7 @@ No, and nothing can. You can see which have run longest, which is a reasonable p
 <details>
 <summary><b>Why does an ad body say `{{product.brand}}`?</b></summary>
 
-It is a catalogue ad. Meta fills those tokens per product at delivery. That is the real ad text.
+It is a catalog ad. Meta fills those tokens per product at delivery. That is the real ad text.
 
 </details>
 
@@ -432,6 +479,32 @@ The Ad Library is published deliberately, for transparency, and is open without 
 <summary><b>Which countries work?</b></summary>
 
 All of them. Pass any two-letter country code.
+
+</details>
+
+<details>
+<summary><b>Can it change anything in my ad account?</b></summary>
+
+It cannot. Every tool reads Meta's public Ad Library, the same pages anyone can
+open in a browser. Nothing here signs in to an ad account, posts, pays or
+deletes, so there is no approval step and no read-only switch to set.
+
+The one thing it keeps is `diff_advertiser`'s snapshots of what an advertiser
+was running, on your own machine, so it can tell you what changed.
+
+</details>
+
+<details>
+<summary><b>How do I update it, or remove it?</b></summary>
+
+With `@latest` in your client's config, `npx` fetches the newest version when
+the client starts the server, so there is nothing to update by hand. A global
+install updates with `npm i -g @thenavidm/facebook-ad-library-mcp-cli`.
+
+To remove it, delete its entry from your client's config and restart the
+client, or run `npm uninstall -g @thenavidm/facebook-ad-library-mcp-cli` for a
+global install. The snapshots `diff_advertiser` keeps live in `FBADS_STORE_DIR`,
+or your app data folder, and can be deleted with it.
 
 </details>
 
@@ -465,12 +538,22 @@ HTTP, for `--http` only.
 | `FBADS_HTTP_PORT` | `8787` | Port |
 | `FBADS_HTTP_HOST` | `127.0.0.1` | Interface to bind |
 | `FBADS_HTTP_TOKEN` | none | Bearer token for the endpoint |
+| `FBADS_HTTP_ALLOWED_ORIGINS` | none | Comma-separated browser origins allowed to connect; a page from any other site is refused |
+
+Slipway's own.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `FBADS_SURFACE` | `full` | `search` lists three tools that find, describe and run the rest |
+| `FBADS_TOOL_TIMEOUT_MS` | none | Give up on any tool after this long |
+| `FBADS_DEBUG` | `0` | `1` prints debug lines on stderr |
 
 ## Dependencies
 
 | Package | License | Why |
 |---|---|---|
-| [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol/typescript-sdk) | MIT | the MCP protocol implementation |
+| [Slipway](https://github.com/thenavidm/slipway) | Apache-2.0 | the MCP server and the CLI from one definition of each tool |
+| [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) | Apache-2.0 | the MCP protocol and transports, through Slipway |
 | [zod](https://github.com/colinhacks/zod) | MIT | tool argument schemas |
 | [playwright](https://github.com/microsoft/playwright) | Apache-2.0 | drives Chromium for the free backend, optional |
 
@@ -478,7 +561,7 @@ HTTP, for `--http` only.
 
 Run into a problem or have a question? [Open an issue](https://github.com/thenavidm/facebook-ad-library-mcp-cli/issues) and I will help.
 
-## About the author 👋
+## About the author
 
 Navid Moazzez is a leading AI business strategist, and the host of the AI Creator Summit, watched by 100,000+ creators. He helps creators and founders master AI and build their own AI Operating System (AI OS) to automate their business and life. He creates useful free tools, MCP servers and CLIs that creators and founders can use in their own workflows.
 

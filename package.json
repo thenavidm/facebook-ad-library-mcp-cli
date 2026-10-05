@@ -1,6 +1,6 @@
 {
   "name": "@thenavidm/facebook-ad-library-mcp-cli",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Facebook Ad Library MCP server and CLI for Claude Code, Codex and AI agents. 9 tools that read every ad running on Facebook, Instagram, Messenger, Threads and Audience Network, for any advertiser in any country, free and with no API key.",
   "type": "module",
   "main": "./dist/index.js",
@@ -10,7 +10,7 @@
     "facebook-ad-library-mcp-cli": "dist/npx.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "build": "tsc",
@@ -19,12 +19,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "build:mcpb": "bash desktop-extension/build.sh"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0",
-    "zod": "^3.25.76",
-    "zod-to-json-schema": "^3.25.2"
+    "@thenavidm/slipway": "^0.1.12",
+    "zod": "^4.2.0"
   },
   "optionalDependencies": {
     "playwright": "^1.62.1"
@@ -58,7 +58,10 @@
     "ai-agents",
     "llm-tools",
     "cli",
-    "command-line-tool"
+    "command-line-tool",
+    "mcp-cli",
+    "facebook-ad-library-cli",
+    "slipway"
   ],
   "files": [
     "dist",

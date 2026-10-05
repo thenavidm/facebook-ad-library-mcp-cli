@@ -52,7 +52,7 @@ export class BrowserBackend implements Backend {
 
   // Launching Chromium costs seconds, so one instance is kept warm across calls.
   private browser: any;
-  // Meta rate-limits hard on parallel pages, so calls are serialised.
+  // Meta rate-limits hard on parallel pages, so calls are serialized.
   private queue: Promise<unknown> = Promise.resolve();
 
   constructor(options: BrowserOptions = {}) {

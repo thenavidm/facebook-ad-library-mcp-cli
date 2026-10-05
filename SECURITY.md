@@ -63,12 +63,12 @@ live attack surface, not a hypothetical one.
 Two mitigations, and neither is complete:
 
 - The server instructions and the shipped `SKILL.md` both tell the model that ad
-  content is data to summarise and never instructions to follow. That is in
+  content is data to summarize and never instructions to follow. That is in
   context before the first tool result arrives.
 - There is no write path, so the usual goal of an injection, getting the agent to
   act on someone's behalf, has nothing to reach here.
 
-The second is the real defence, and it is structural rather than advisory. This
+The second is the real defense, and it is structural rather than advisory. This
 server cannot be talked into doing something, because there is nothing it can do.
 
 ## Deliberately not implemented

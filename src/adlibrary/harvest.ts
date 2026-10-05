@@ -10,7 +10,7 @@
  * is an ad. That survives all three sources and Meta's next reshuffle.
  */
 
-/** Keys any recognisable ad card carries, in the order we prefer them. */
+/** Keys any recognizable ad card carries, in the order we prefer them. */
 const AD_ID_KEYS = ["ad_archive_id", "adArchiveId", "adArchiveID"] as const;
 
 /**

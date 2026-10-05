@@ -1,206 +1,85 @@
 /**
- * The CLI adapter.
+ * The two surfaces, now that Slipway builds both from ALL_TOOLS.
  *
- * What matters here is that the shell surface is derived from the tool specs
- * rather than described a second time, so the tests that count are the ones
- * asserting parity with ALL_TOOLS and the ones covering the argv shapes a
- * person actually types.
+ * Parsing, help and the exit-code contract are Slipway's and tested there. What
+ * matters here: every tool arrives on both surfaces intact, under 0.5's command
+ * names; the resources and prompts still reach a client; the provider errors
+ * keep their exit codes; the CLI closes the browser after its one call; and the
+ * docs stay in step with the code.
  */
 
-import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
-import { z } from "zod";
-import { EXIT, exitCodeFor, flagsFor, parseArgs, isCliCommand } from "../src/cli.js";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { EXIT } from "@thenavidm/slipway";
+import { checkApp, cli, connect } from "@thenavidm/slipway/testing";
+import { app } from "../src/app.js";
 import { AdLibraryError } from "../src/errors.js";
 import { ALL_TOOLS } from "../src/tools/index.js";
+import { toSlipway } from "../src/tools/kit.js";
 
-describe("flagsFor", () => {
-  it("derives a flag per schema key, kebab-cased", () => {
-    const flags = flagsFor({ reply_to: z.string().optional() });
-    expect(flags[0]).toMatchObject({ key: "reply_to", flag: "--reply-to", kind: "string" });
+afterEach(() => vi.restoreAllMocks());
+
+describe("Meta Ad Library on Slipway", () => {
+  it("offers every tool as a command and over MCP, under the same names", async () => {
+    const list = await cli(app, [], { env: {} });
+    for (const tool of ALL_TOOLS) expect(list.stdout).toContain(tool.command);
+    const mcp = await connect(app, { env: {} });
+    const tools = await mcp.listTools();
+    await mcp.close();
+    expect(tools.map((tool) => tool.name)).toEqual(ALL_TOOLS.map((tool) => tool.name));
+    // Every tool reads a public archive; only the two that touch no network say so.
+    for (const tool of tools) expect(tool.annotations).toMatchObject({ readOnlyHint: true, destructiveHint: false, idempotentHint: true });
+    const closedWorld = tools.filter((tool) => tool.annotations?.openWorldHint === false).map((tool) => tool.name).sort();
+    expect(closedWorld).toEqual(["ad_library_url", "backend_status"]);
   });
 
-  it("reads required from the absence of .optional()", () => {
-    const flags = flagsFor({ text: z.string(), account: z.string().optional() });
-    expect(flags.find((f) => f.key === "text")?.required).toBe(true);
-    expect(flags.find((f) => f.key === "account")?.required).toBe(false);
+  it("serves the config and concepts resources, and both prompts with their argument", async () => {
+    const mcp = await connect(app, { env: {} });
+    const resources = (await mcp.request("resources/list")) as { resources: Array<{ uri: string }> };
+    const config = (await mcp.request("resources/read", { uri: "fbads://config" })) as { contents: Array<{ text: string }> };
+    const prompt = (await mcp.request("prompts/get", { name: "competitor-teardown", arguments: { brand: "Acme" } })) as { messages: Array<{ content: { text: string } }> };
+    const prompts = (await mcp.request("prompts/list")) as { prompts: Array<{ name: string }> };
+    await mcp.close();
+    expect(resources.resources.map((r) => r.uri).sort()).toEqual(["fbads://concepts", "fbads://config"]);
+    expect(JSON.parse(config.contents[0]!.text)).toMatchObject({ backend: "browser", costs_money_per_request: false });
+    expect(prompts.prompts.map((p) => p.name)).toEqual(["competitor-teardown", "creative-angles"]);
+    expect(prompt.messages[0]!.content.text).toContain('Call list_advertisers for "Acme"');
   });
 
-  it("carries .describe() through as help", () => {
-    const flags = flagsFor({ text: z.string().describe("The post body.") });
-    expect(flags[0]?.help).toBe("The post body.");
+  it("returns structured data for a tool that declares it, and closes the backend after a CLI call", async () => {
+    const run = await cli(app, ["backend-status", "--json"], { env: {} });
+    expect(run.code).toBe(0);
+    expect(JSON.parse(run.stdout)).toMatchObject({ backend: "browser", needs_api_key: false });
+    const mcp = await connect(app, { env: {} });
+    const result = await mcp.callTool("backend_status", {});
+    await mcp.close();
+    expect(result.structuredContent).toMatchObject({ backend: "browser" });
   });
 
-  it("finds the description whichever side of .optional() it was chained", () => {
-    const outer = flagsFor({ a: z.string().optional().describe("outer") });
-    const inner = flagsFor({ b: z.string().describe("inner").optional() });
-    expect(outer[0]?.help).toBe("outer");
-    expect(inner[0]?.help).toBe("inner");
+  it("exits 2 for a missing argument, and 10 for a provider backend with no key", async () => {
+    expect((await cli(app, ["search-ads"], { env: {} })).code).toBe(EXIT.usage);
+    const run = await cli(app, ["search-ads", "--query", "shoes"], { env: { FBADS_BACKEND: "scrapecreators" } });
+    expect(run.code).toBe(EXIT.notConfigured);
+    expect(JSON.parse(run.stderr).hint).toContain("SCRAPECREATORS_API_KEY");
   });
 
-  it("exposes an enum's values as choices", () => {
-    const flags = flagsFor({ reply_control: z.enum(["everyone", "nobody"]).optional() });
-    expect(flags[0]).toMatchObject({ kind: "enum", choices: ["everyone", "nobody"] });
-  });
-
-  it("marks a scalar array repeatable and an object array json", () => {
-    const flags = flagsFor({
-      langs: z.array(z.string()).optional(),
-      images: z.array(z.object({ url: z.string() })).optional(),
-    });
-    expect(flags.find((f) => f.key === "langs")).toMatchObject({ kind: "string", repeatable: true });
-    expect(flags.find((f) => f.key === "images")).toMatchObject({ kind: "json", repeatable: true });
-  });
-});
-
-describe("parseArgs", () => {
-  const flags = flagsFor({
-    text: z.string(),
-    limit: z.number().optional(),
-    confirm: z.boolean().optional(),
-    langs: z.array(z.string()).optional(),
-    link: z.object({ uri: z.string() }).optional(),
-    reply_control: z.enum(["everyone", "nobody"]).optional(),
-  });
-
-  it("accepts --flag value and --flag=value alike", () => {
-    expect(parseArgs(["--text", "hi"], flags)).toEqual({ text: "hi" });
-    expect(parseArgs(["--text=hi"], flags)).toEqual({ text: "hi" });
-  });
-
-  it("accepts the underscore spelling of a flag", () => {
-    expect(parseArgs(["--reply_control", "nobody"], flags)).toEqual({ reply_control: "nobody" });
-  });
-
-  it("treats a boolean as a bare switch", () => {
-    expect(parseArgs(["--text", "hi", "--confirm"], flags)).toEqual({ text: "hi", confirm: true });
-    expect(parseArgs(["--confirm=false"], flags)).toEqual({ confirm: false });
-  });
-
-  it("coerces numbers, and refuses ones that are not", () => {
-    expect(parseArgs(["--limit", "25"], flags)).toEqual({ limit: 25 });
-    expect(() => parseArgs(["--limit", "many"], flags)).toThrow(/expects a number/);
-  });
-
-  it("parses a json flag, and refuses malformed json", () => {
-    expect(parseArgs(['--link={"uri":"https://x.com"}'], flags)).toEqual({
-      link: { uri: "https://x.com" },
-    });
-    expect(() => parseArgs(["--link", "{oops"], flags)).toThrow(/expects JSON/);
-  });
-
-  it("collects a repeatable flag into an array", () => {
-    expect(parseArgs(["--langs", "en", "--langs", "sv"], flags)).toEqual({ langs: ["en", "sv"] });
-  });
-
-  it("checks an enum against its choices", () => {
-    expect(() => parseArgs(["--reply-control", "friends"], flags)).toThrow(/expects one of/);
-  });
-
-  it("fills the first required flag from a bare argument", () => {
-    expect(parseArgs(["hello"], flags)).toEqual({ text: "hello" });
-  });
-
-  it("wraps a bare argument when the required flag is repeatable", () => {
-    const repeatable = flagsFor({ actors: z.array(z.string()) });
-    expect(parseArgs(["bsky.app"], repeatable)).toEqual({ actors: ["bsky.app"] });
-  });
-
-  it("refuses an unknown option rather than dropping it", () => {
-    expect(() => parseArgs(["--nope", "x"], flags)).toThrow(/Unknown option/);
-  });
-
-  it("refuses a second bare argument", () => {
-    expect(() => parseArgs(["one", "two"], flags)).toThrow(/Unexpected argument/);
-  });
-});
-
-describe("parity with the MCP surface", () => {
-  it("routes every tool name, in both spellings", () => {
-    for (const tool of ALL_TOOLS) {
-      expect(isCliCommand([tool.name])).toBe(true);
-      expect(isCliCommand([tool.name.replace(/_/g, "-")])).toBe(true);
-    }
-  });
-
-  it("builds flags for every tool without throwing", () => {
-    for (const tool of ALL_TOOLS) {
-      expect(() => flagsFor(tool.schema)).not.toThrow();
-    }
-  });
-
-  it("gives every schema key a flag", () => {
-    for (const tool of ALL_TOOLS) {
-      expect(flagsFor(tool.schema)).toHaveLength(Object.keys(tool.schema).length);
-    }
-  });
-
-  it("leaves the server's own flags alone", () => {
-    expect(isCliCommand(["--http"])).toBe(false);
-    expect(isCliCommand(["--version"])).toBe(false);
-    expect(isCliCommand([])).toBe(false);
-  });
-});
-
-describe("documentation stays in step with the code", () => {
-  const read = (p: string): string => readFileSync(new URL(p, import.meta.url), "utf-8");
-  const names = (text: string): Set<string> => new Set(text.match(/FBADS_[A-Z_]+/g) ?? []);
-
-  /**
-   * Two variables shipped undocumented and five never reached `--help`, which is
-   * the kind of drift nobody notices because both sides look complete on their own.
-   */
-  it("documents every environment variable the code reads", () => {
-    const used = names(["config.ts", "transport/http.ts"].map((f) => read(`../src/${f}`)).join("\n"));
-    const documented = names(read("../README.md"));
-    expect([...used].filter((v) => !documented.has(v))).toEqual([]);
-  });
-
-  it("lists every environment variable in --help", () => {
-    const used = names(["config.ts", "transport/http.ts"].map((f) => read(`../src/${f}`)).join("\n"));
-    const helped = names(read("../src/index.ts"));
-    // The help groups the three HTTP ones as `FBADS_HTTP_PORT / _HOST / _TOKEN`.
-    const shorthand = new Set(["FBADS_HTTP_HOST", "FBADS_HTTP_TOKEN"]);
-    expect([...used].filter((v) => !helped.has(v) && !shorthand.has(v))).toEqual([]);
-  });
-
-  /**
-   * Two in-page links pointed at headings that had been renamed, including the
-   * one row routing a shell user to the CLI. The ship checklist's link pass only
-   * greps http, so a dead `#anchor` is the kind that ships quietly.
-   */
-  it.each(["../README.md", "../INSTALL.md"])("has no dead in-page anchors in %s", (file) => {
-    const md = read(file);
-    const slugs = new Set<string>();
-    for (const [, heading] of md.matchAll(/^#{2,4} (.+)$/gm)) {
-      const stripped = (heading as string).toLowerCase().replace(/[^\w\s-]/g, "");
-      // GitHub keeps the trailing hyphen when a heading ends in an emoji.
-      slugs.add(stripped.trim().replace(/\s+/g, "-"));
-      slugs.add(stripped.replace(/\s+/g, "-"));
-    }
-    // GitHub keeps combining marks in a slug, so an emoji's variation selector
-    // (U+FE0F) survives in the anchor, percent-encoded in a link.
-    for (const [, heading] of md.matchAll(/^#{2,4} (.+)$/gm)) {
-      slugs.add((heading as string).toLowerCase().replace(/[^\p{L}\p{M}\p{N}\p{Pc}\s-]/gu, "").replace(/\s/g, "-"));
-    }
-    const dead = [...md.matchAll(/\[[^\]]+\]\(#([^)]+)\)/g)]
-      .map((m) => decodeURIComponent(m[1] as string))
-      .filter((a) => !slugs.has(a));
-    expect(dead).toEqual([]);
+  it("passes slipway check", async () => {
+    const report = await checkApp(app, { env: {} });
+    expect(report.findings.filter((finding) => finding.level === "error")).toEqual([]);
   });
 });
 
 describe("exit codes follow the house contract", () => {
-  const code = (message: string): number => exitCodeFor(new AdLibraryError(message));
+  const code = (message: string): number => (toSlipway(new AdLibraryError(message)) as { exitCode: number }).exitCode;
 
   it("a missing argument is 2", () => {
     expect(code("Pass either query or page_ids.")).toBe(EXIT.usage);
   });
 
   it("a backend that is not set up is 10", () => {
-    expect(code("No Meta Ad Library API token is configured.")).toBe(EXIT.config);
-    expect(code("The scrapecreators backend needs an API key.")).toBe(EXIT.config);
-    expect(code("The browser backend needs Playwright, which is not installed.")).toBe(EXIT.config);
+    expect(code("No Meta Ad Library API token is configured.")).toBe(EXIT.notConfigured);
+    expect(code("The scrapecreators backend needs an API key.")).toBe(EXIT.notConfigured);
+    expect(code("The browser backend needs Playwright, which is not installed.")).toBe(EXIT.notConfigured);
   });
 
   it("a rejected key is 4", () => {
@@ -212,7 +91,72 @@ describe("exit codes follow the house contract", () => {
     expect(code("ScrapeCreators is out of credits (402).")).toBe(EXIT.rateLimited);
   });
 
-  it("anything else from upstream is 5", () => {
+  it("anything else from upstream is 5, a library's own error too", () => {
     expect(code("Apify error 500: upstream")).toBe(EXIT.api);
+    class BrowserTimeout extends Error {}
+    expect((toSlipway(new BrowserTimeout("page.goto: Timeout 60000ms exceeded")) as { exitCode: number }).exitCode).toBe(EXIT.api);
+  });
+
+  it("keeps the provider's hint and backend", () => {
+    const known = toSlipway(new AdLibraryError("ScrapeCreators is out of credits (402).", { hint: "Top up the account.", backend: "scrapecreators" })) as { hint: string; details: unknown };
+    expect(known.hint).toBe("Top up the account.");
+    expect(known.details).toEqual({ backend: "scrapecreators" });
+  });
+
+  it("leaves a bug in this code as unexpected", () => {
+    expect(toSlipway(new TypeError("x is undefined"))).toBeInstanceOf(TypeError);
+  });
+});
+
+describe("documentation stays in step with the code", () => {
+  const read = (p: string): string => readFileSync(new URL(p, import.meta.url), "utf-8");
+  const names = (text: string): Set<string> =>
+    new Set((text.match(/\b(FBADS|SCRAPECREATORS|APIFY|META_ADS)_[A-Z_]+/g) ?? []).filter((name) => !name.endsWith("_")));
+  const source = (dir: string): string =>
+    readdirSync(new URL(dir, import.meta.url), { withFileTypes: true })
+      .map((entry) => (entry.isDirectory() ? source(`${dir}${entry.name}/`) : entry.name.endsWith(".ts") ? read(`${dir}${entry.name}`) : ""))
+      .join("\n");
+
+  /** Every variable the server reads: this repo's code, and Slipway's as agent-context lists them. */
+  const used = async (): Promise<Set<string>> => {
+    const context = JSON.parse((await cli(app, ["agent-context"], { env: {} })).stdout);
+    return new Set([...names(source("../src/")), ...context.settings.map((setting: { env: string }) => setting.env)]);
+  };
+
+  /**
+   * Two variables shipped undocumented and five never reached `--help`, which is
+   * the kind of drift nobody notices because both sides look complete on their own.
+   */
+  it("documents every environment variable the code reads", async () => {
+    const documented = names(read("../README.md"));
+    expect([...(await used())].filter((v) => !documented.has(v))).toEqual([]);
+  });
+
+  it("lists every environment variable in --help", async () => {
+    const help = (await cli(app, ["--help"], { env: {} })).stdout;
+    // The help groups the HTTP ones as `FBADS_HTTP_PORT / _HOST / _TOKEN / _ALLOWED_ORIGINS`.
+    const shorthand = new Set(["FBADS_HTTP_HOST", "FBADS_HTTP_TOKEN", "FBADS_HTTP_ALLOWED_ORIGINS"]);
+    expect([...(await used())].filter((v) => !help.includes(v) && !shorthand.has(v))).toEqual([]);
+  });
+
+  /**
+   * Two in-page links pointed at headings that had been renamed, including the
+   * one row routing a shell user to the CLI. The ship checklist's link pass only
+   * greps http, so a dead `#anchor` is the kind that ships quietly.
+   */
+  it.each(["../README.md", "../INSTALL.md"])("has no dead in-page anchors in %s", (file) => {
+    if (!existsSync(new URL(file, import.meta.url))) return; // repo may ship one doc
+    const md = read(file).replace(/```[\s\S]*?```/g, "");
+    // GitHub's slug keeps letters, marks, numbers and connector punctuation, so an
+    // emoji's variation selector (U+FE0F) stays in the anchor and a link has to carry it.
+    const slugs = new Set(
+      [...md.matchAll(/^#{1,6} (.+)$/gm)].map(([, heading]) =>
+        (heading as string).trim().toLowerCase().replace(/[^\p{L}\p{M}\p{N}\p{Pc}\s-]/gu, "").replace(/ /g, "-"),
+      ),
+    );
+    const dead = [...md.matchAll(/\[[^\]]+\]\(#([^)]+)\)/g)]
+      .map((m) => decodeURIComponent(m[1] as string))
+      .filter((a) => !slugs.has(a));
+    expect(dead).toEqual([]);
   });
 });

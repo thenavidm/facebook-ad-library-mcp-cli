@@ -128,6 +128,6 @@ npx -y @thenavidm/facebook-ad-library-mcp-cli@latest doctor
 | Empty results everywhere | Same cause. Confirm with `ad_library_url` opened in a real browser |
 | One search empty, others fine | Genuinely no results. Broaden the keyword or set `active_status` to `all` |
 | `spend` and `reach` are null | Correct outside the EU and outside political ads |
-| Body contains `{{product.brand}}` | A real catalogue ad, not corrupted data |
+| Body contains `{{product.brand}}` | A real catalog ad, not corrupted data |
 | `transcribe_ad` unavailable | Only on the `scrapecreators` backend |
 | Server missing from the client | `npx` is not on the client's PATH. Use the absolute path from `which npx` |
