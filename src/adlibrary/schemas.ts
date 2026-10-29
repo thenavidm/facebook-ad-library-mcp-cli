@@ -16,6 +16,7 @@ export const creativeSchema = z
   .object({
     kind: z.enum(["image", "video"]),
     imageUrl: z.string().optional(),
+    imageResizedUrl: z.string().optional(),
     videoHdUrl: z.string().optional(),
     videoSdUrl: z.string().optional(),
     previewImageUrl: z.string().optional(),
@@ -50,6 +51,13 @@ export const adSummarySchema = z.object({
   spend: z.unknown().optional().describe("EU and political ads only. Null elsewhere is correct."),
   reach: z.unknown().optional(),
   details: z.string().optional(),
+  title: z.string().optional().describe("With full."),
+  link_url: z.string().optional().describe("With full: the landing page."),
+  creative_list: z.array(creativeSchema).optional().describe("With full: every creative, its image or video and its words."),
+  advertiser_url: z.string().optional().describe("With full."),
+  advertiser_picture: z.string().optional().describe("With full."),
+  advertiser_likes: z.number().optional().describe("With full."),
+  advertiser_categories: z.array(z.string()).optional().describe("With full."),
 });
 
 export const searchAdsOutput = {

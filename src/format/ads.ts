@@ -53,6 +53,24 @@ export function summarise(ad: Ad): Record<string, unknown> {
   });
 }
 
+/**
+ * One ad in a result list with what a card needs to show it: every creative's image or video and words, the title,
+ * the landing page and the advertiser's picture. The search already read them, so asking costs nothing more than the
+ * tokens; without it a list of 50 ads needed 50 `get_ad` calls to draw.
+ */
+export function summariseFull(ad: Ad): Record<string, unknown> {
+  return compact({
+    ...summarise(ad),
+    title: ad.title,
+    link_url: ad.linkUrl,
+    creative_list: ad.creatives,
+    advertiser_url: ad.pageUrl,
+    advertiser_picture: ad.pageProfilePictureUrl,
+    advertiser_likes: ad.pageLikes,
+    advertiser_categories: ad.pageCategories,
+  });
+}
+
 /** One ad in full, for `get_ad`. Every creative, every copy variant. */
 export function detail(ad: Ad): Record<string, unknown> {
   return compact({

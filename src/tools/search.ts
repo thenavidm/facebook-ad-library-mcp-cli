@@ -4,7 +4,7 @@
 
 import { z } from "zod";
 import { buildUrl } from "../adlibrary/url.js";
-import { detail, summarise } from "../format/ads.js";
+import { detail, summarise, summariseFull } from "../format/ads.js";
 import {
   adLibraryUrlOutput,
   getAdOutput,
@@ -35,6 +35,13 @@ const searchAds = defineTool({
         "Advertiser Page ID. Returns that Page's ads instead of a keyword search. " +
           "Use list_advertisers first if you only know the brand name.",
       ),
+    full: z
+      .boolean()
+      .optional()
+      .describe(
+        "Also return each ad's creatives (image or video URLs and their words), title, landing page and the " +
+          "advertiser's picture, read in the same search. Default false: the short summary.",
+      ),
     ...searchArgs,
   },
   outputSchema: searchAdsOutput,
@@ -62,7 +69,7 @@ const searchAds = defineTool({
       cursor: result.cursor,
       url: result.url,
       note: result.note,
-      ads: result.ads.map(summarise),
+      ads: result.ads.map(args.full ? summariseFull : summarise),
     };
   },
 });
