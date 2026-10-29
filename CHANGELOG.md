@@ -12,6 +12,10 @@
 
 What changed, newest first, in terms of what it means for someone using it.
 
+## Unreleased
+
+- **`search_ads` takes `full`**: each ad also comes back with its creatives (every image or video URL and its words), its title, landing page and the advertiser's picture, likes and categories. The search already read them, so showing 50 ads as cards takes one call of about 15 seconds instead of a `get_ad` for each. Without `full` the answer is the summary it always was.
+
 ## 0.6.1, 2026-10-05
 
 - **Built on Slipway 0.1.17**, which a fresh install of 0.6.0 already used. Since the Slipway 0.6.0 was measured on, 0.1.12, `which` also reads a tool's argument names and prints a title once where a description opens with it, and the general help names the settings that connect an account and the safety switches and counts the rest, which `agent-context` describes one by one. [Slipway's changelog](https://github.com/thenavidm/slipway/blob/main/CHANGELOG.md) lists the rest.
