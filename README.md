@@ -147,7 +147,7 @@ All nine are in [section 6](#6-tools-%EF%B8%8F).
 | 6 | [Tools](#6-tools-%EF%B8%8F) | All nine, and what each reaches |
 | 7 | [How it works](#7-how-it-works-%EF%B8%8F) | Why it returns more than a scraper |
 | 8 | [Limits, honestly](#8-limits-honestly-) | What no source can tell you |
-| 9 | [FAQ](#9-faq-) | Including what an MCP server is |
+| 9 | [FAQ](#9-faq) | Including what an MCP server is |
 
 ## 1. What you can ask it 💬
 
@@ -396,7 +396,7 @@ What you can infer is longevity. An ad running six months is probably working, b
 
 **Creative URLs expire.** Meta's CDN links are short-lived. Download what you want to keep, when you find it.
 
-## 9. FAQ ❓
+## 9. FAQ
 
 <details>
 <summary><b>What is an MCP server?</b></summary>
@@ -561,20 +561,30 @@ Slipway's own.
 
 Run into a problem or have a question? [Open an issue](https://github.com/thenavidm/facebook-ad-library-mcp-cli/issues) and I will help.
 
-## About the author
+## Built by
+
+<table>
+<tr>
+<td width="150" align="center" valign="top"><h3><a href="https://navid.me"><img src="https://cdn.navid.me/navid-moazzez.jpg" width="120" height="120" alt="Navid Moazzez"></a></h3></td>
+<td valign="top">
+
+### Navid Moazzez
 
 Navid Moazzez is a leading AI business strategist, and the host of the AI Creator Summit, watched by 100,000+ creators. He helps creators and founders master AI and build their own AI Operating System (AI OS) to automate their business and life. He creates useful free tools, MCP servers and CLIs that creators and founders can use in their own workflows.
 
-**Links**
+<a href="https://navid.me"><picture><source media="(prefers-color-scheme: dark)" srcset="https://cdn.navid.me/repos/about-navid-me-dark.svg"><img src="https://cdn.navid.me/repos/about-navid-me-light.svg" alt="navid.me" height="30"></picture></a>
+<a href="https://navid.bio"><picture><source media="(prefers-color-scheme: dark)" srcset="https://cdn.navid.me/repos/about-navid-bio-dark.svg"><img src="https://cdn.navid.me/repos/about-navid-bio-light.svg" alt="navid.bio" height="30"></picture></a>
+<a href="https://navid.media"><picture><source media="(prefers-color-scheme: dark)" srcset="https://cdn.navid.me/repos/about-navid-media-dark.svg"><img src="https://cdn.navid.me/repos/about-navid-media-light.svg" alt="Navid Media" height="30"></picture></a>
+<a href="https://youtube.com/@thenavidm?sub_confirmation=1"><picture><source media="(prefers-color-scheme: dark)" srcset="https://cdn.navid.me/repos/about-youtube-dark.svg"><img src="https://cdn.navid.me/repos/about-youtube-light.svg" alt="YouTube" height="30"></picture></a>
+<a href="https://youtube.com/@thenavidai?sub_confirmation=1"><picture><source media="(prefers-color-scheme: dark)" srcset="https://cdn.navid.me/repos/about-youtube-ai-dark.svg"><img src="https://cdn.navid.me/repos/about-youtube-ai-light.svg" alt="AI channel" height="30"></picture></a>
+<a href="https://x.com/thenavidm"><picture><source media="(prefers-color-scheme: dark)" srcset="https://cdn.navid.me/repos/about-x-dark.svg"><img src="https://cdn.navid.me/repos/about-x-light.svg" alt="X" height="30"></picture></a>
+<a href="https://instagram.com/thenavidm"><picture><source media="(prefers-color-scheme: dark)" srcset="https://cdn.navid.me/repos/about-instagram-dark.svg"><img src="https://cdn.navid.me/repos/about-instagram-light.svg" alt="Instagram" height="30"></picture></a>
+<a href="https://linkedin.com/in/thenavidm"><picture><source media="(prefers-color-scheme: dark)" srcset="https://cdn.navid.me/repos/about-linkedin-dark.svg"><img src="https://cdn.navid.me/repos/about-linkedin-light.svg" alt="LinkedIn" height="30"></picture></a>
+<a href="https://github.com/thenavidm"><picture><source media="(prefers-color-scheme: dark)" srcset="https://cdn.navid.me/repos/about-github-dark.svg"><img src="https://cdn.navid.me/repos/about-github-light.svg" alt="More repos" height="30"></picture></a>
 
-- Personal website: [navid.me](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp-cli&utm_content=readme)
-- Navid Media: [navid.media](https://navid.media?utm_source=github&utm_medium=referral&utm_campaign=facebook-ad-library-mcp-cli&utm_content=readme)
-- YouTube: [@thenavidm](https://youtube.com/@thenavidm?sub_confirmation=1) and [@thenavidai](https://youtube.com/@thenavidai?sub_confirmation=1)
-- X: [@thenavidm](https://x.com/thenavidm)
-- Instagram: [@thenavidm](https://instagram.com/thenavidm)
-- LinkedIn: [thenavidm](https://linkedin.com/in/thenavidm)
-
-If this is useful, star the repo and come say hi on [X](https://x.com/thenavidm).
+</td>
+</tr>
+</table>
 
 ## License
 
